@@ -9,15 +9,6 @@ from google.genai import types
 from google.adk.tools import google_search
 from .count_invocation_plugin import CountInvocationPlugin
 
-REVIEW_SYSTEM_PROMPT = """
-You are an AI code review assistant. Review ONLY the provided diff hunk. If there is something you don't understand, use the search tool to look it up.
-- Identify correctness issues
-- Spot bugs
-- Flag style/consistency problems
-- Suggest improvements
-Be specific and concise.
-"""
-
 SUMMARY_SYSTEM_PROMPT = """
 You are a code review summarizer. Summarize the provided reviews into a single review. Provide the summary as markdown.
 """
@@ -91,50 +82,60 @@ async def run_session(
 
     return response
 
-async def review_hunk(hunk: str) -> str:
-    """
-    Review a diff hunk.
+class ReviewAgent:
+    REVIEW_SYSTEM_PROMPT = """
+You are an AI code review assistant. Review ONLY the provided diff hunk. If there is something you don't understand, use the search tool to look it up.
+- Identify correctness issues
+- Spot bugs
+- Flag style/consistency problems
+- Suggest improvements
+Be specific and concise.
+"""
+    def __init__(self):
+        self.agent = Agent(
+            model=Gemini(model=MODEL_NAME, retry_options=retry_config),
+            name="code_review_bot",
+            description="A code review bot",
+            tools=[google_search],
+            instruction=self.REVIEW_SYSTEM_PROMPT,
+        )
 
-    Args:
-        hunk (str): The diff hunk to review.
+        self.code_review_app_compacting = App(
+            name="code_review_app_compacting",
+            root_agent=review_agent,
+            events_compaction_config=EventsCompactionConfig(
+                compaction_interval=3,  # Trigger compaction every 3 invocations
+                overlap_size=1,  # Keep 1 previous turn for context
+            ),
+            plugins=[CountInvocationPlugin()],
+        )
+        
+        self.session_service = InMemorySessionService()
 
-    Returns:
-        str: The review.
-    """
-    review_agent = Agent(
-        model=Gemini(model=MODEL_NAME, retry_options=retry_config),
-        name="code_review_bot",
-        description="A code review bot",
-        tools=[google_search],
-        instruction=REVIEW_SYSTEM_PROMPT,
-    )
-    
-    # App with Events Compaction enabled
-    code_review_app_compacting = App(
-        name="code_review_app_compacting",
-        root_agent=review_agent,
-        events_compaction_config=EventsCompactionConfig(
-            compaction_interval=3,  # Trigger compaction every 3 invocations
-            overlap_size=1,  # Keep 1 previous turn for context
-        ),
-        plugins=[CountInvocationPlugin()],
-    )
-    
-    session_service = InMemorySessionService()
+        # Create a new runner for our upgraded app
+        self.code_review_runner_compacting = Runner(
+            app=self.code_review_app_compacting, session_service=self.session_service
+        )
 
-    # Create a new runner for our upgraded app
-    code_review_runner_compacting = Runner(
-        app=code_review_app_compacting, session_service=session_service
-    )
+    async def review(self, hunk: str) -> str:
+        """
+        Review a diff hunk.
 
-    resp = await run_session(
-        code_review_runner_compacting,
-        session_service,
-        f"Here is a diff hunk:\n```\n{hunk}\n```\nProvide the review:",
-        "code_review",
-    )
+        Args:
+            hunk (str): The diff hunk to review.
 
-    return resp
+        Returns:
+            str: The review.
+        """
+        resp = await run_session(
+            self.code_review_runner_compacting,
+            self.session_service,
+            f"Here is a diff hunk:\n```\n{hunk}\n```\nProvide the review:",
+            "code_review",
+        )
+
+        return resp
+
 
 async def summarise_reviews(reviews: list[str]) -> str:
     """

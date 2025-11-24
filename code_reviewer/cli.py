@@ -3,7 +3,7 @@ import click
 import asyncio
 import functools
 from .diff import get_pr_diff, get_diff
-from .agents import review_hunk, summarise_reviews
+from .agents import ReviewAgent, summarise_reviews
 from .diff import split_by_file, split_into_hunks
 import logging
 
@@ -51,6 +51,7 @@ async def review(staged, compare_to):
 
     # Review each file
     reviews = []
+    review_agent = ReviewAgent()
     for filename, diff in files.items():
         logger.info(f"\n=== 📄 File: {filename} ===")
         hunks = split_into_hunks(diff)
@@ -60,7 +61,7 @@ async def review(staged, compare_to):
             logger.info(hunk)
 
             logger.info("\n--- AI Review ---")
-            review = await review_hunk(hunk)
+            review = await review_agent.review(hunk)
             logger.info(review)
             reviews.append(review)
 
