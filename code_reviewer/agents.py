@@ -102,7 +102,7 @@ Be specific and concise.
 
         self.code_review_app_compacting = App(
             name="code_review_app_compacting",
-            root_agent=review_agent,
+            root_agent=self.agent,
             events_compaction_config=EventsCompactionConfig(
                 compaction_interval=3,  # Trigger compaction every 3 invocations
                 overlap_size=1,  # Keep 1 previous turn for context
