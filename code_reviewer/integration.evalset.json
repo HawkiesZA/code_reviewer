@@ -1,0 +1,29 @@
+{
+  "eval_set_id": "home_automation_integration_suite",
+  "eval_cases": [
+    {
+      "eval_id": "review_simple_diff",
+      "conversation": [
+        {
+          "user_content": {
+            "parts": [
+              {
+                "text": "diff --git a/main.py b/main.py\nnew file mode 100644\nindex 0000000..ad35e5a\n--- /dev/null\n+++ b/main.py\n@@ -0,0 +1 @@\n+print(\"Hello World\")"
+              }
+            ]
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "The diff adds a single line to the file `main.py` which prints \"Hello World\"."
+              }
+            ]
+          },
+          "intermediate_data": {
+            "tool_uses": []
+          }
+        }
+      ]
+    }
+  ]
+}

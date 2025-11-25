@@ -13,3 +13,7 @@ wheels/
 .env
 
 code_review_summary.md
+wp.md
+
+# ADK evaluation results
+.adk/

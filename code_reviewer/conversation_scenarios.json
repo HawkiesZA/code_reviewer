@@ -1,0 +1,12 @@
+{
+  "scenarios": [
+    {
+      "starting_prompt": "What can you do for me?",
+      "conversation_plan": "Generate some Python code for a simple calculator. Then ask the agent to review the code."
+    },
+    {
+      "starting_prompt": "Hi there, what can you do?",
+      "conversation_plan": "Generate some JavaScript code for a simple to-do list application. Then ask the agent to review the code."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "eval_set_id": "eval_set_with_scenarios",
+  "name": "eval_set_with_scenarios",
+  "eval_cases": [
+    {
+      "eval_id": "fb4032ac",
+      "conversation_scenario": {
+        "starting_prompt": "What can you do for me?",
+        "conversation_plan": "Generate some Python code for a simple calculator. Then ask the agent to review the code."
+      },
+      "session_input": {
+        "app_name": "home_automation_agent",
+        "user_id": "user"
+      },
+      "creation_timestamp": 1764068081.829887
+    },
+    {
+      "eval_id": "9f56711e",
+      "conversation_scenario": {
+        "starting_prompt": "Hi there, what can you do?",
+        "conversation_plan": "Generate some JavaScript code for a simple to-do list application. Then ask the agent to review the code."
+      },
+      "session_input": {
+        "app_name": "home_automation_agent",
+        "user_id": "user"
+      },
+      "creation_timestamp": 1764068081.8304
+    }
+  ],
+  "creation_timestamp": 1764068074.4495628
+}
