@@ -29,8 +29,19 @@ def main():
     default=None,
     help="Branch to compare the current branch against (default: auto-detect)."
 )
+@click.option(
+    "--output-file",
+    default="code_review_summary.md",
+    help="Output file for the review summary (default: code_review_summary.md)."
+)
+@click.option(
+    "--token-limit",
+    default=5000,
+    type=int,
+    help="Maximum tokens to process in one go (default: 5000)."
+)
 @make_sync
-async def review(staged, compare_to):
+async def review(staged, compare_to, output_file, token_limit):
     """Review changed files in your Git repository."""
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
@@ -47,31 +58,44 @@ async def review(staged, compare_to):
         print("No changes detected.")
         return
 
-    files = split_by_file(diff_text)
+    # calculate token size of diff by getting total characters and dividing by 5 (approximate token count)
+    total_chars = len(diff_text)
+    estimated_tokens = total_chars // 5
+    logger.info(f"Estimated tokens in diff: {estimated_tokens}")
+    logger.info(f"Token limit: {token_limit}")
 
-    # Review each file
-    reviews = []
     review_agent = ReviewAgent()
-    for filename, diff in files.items():
-        logger.info(f"\n=== 📄 File: {filename} ===")
-        hunks = split_into_hunks(diff)
+    final_review = ""
+    # if the estimated token count is small enough, we can review the whole diff at once
+    if estimated_tokens < token_limit:
+        logger.info("Diff is small enough to review in one go.")
+        final_review = await review_agent.review(diff_text)
+    else:
+        logger.info("Diff is too large, reviewing files individually.")
 
-        for idx, hunk in enumerate(hunks, 1):
-            logger.info(f"\n--- Hunk {idx} ---")
-            logger.info(hunk)
+        files = split_by_file(diff_text)
 
-            logger.info("\n--- AI Review ---")
-            review = await review_agent.review(hunk)
-            logger.info(review)
-            reviews.append(review)
+        # Review each file
+        reviews = []
+        for filename, diff in files.items():
+            logger.info(f"\n=== 📄 File: {filename} ===")
+            hunks = split_into_hunks(diff)
 
-    # Summarise reviews
-    logger.info("\n=== 📄 Summary ===")
-    summary = await summarise_reviews(reviews)
-    logger.info(summary)
+            for idx, hunk in enumerate(hunks, 1):
+                logger.info(f"\n--- Hunk {idx} ---")
+                logger.info(hunk)
+
+                logger.info("\n--- AI Review ---")
+                review = await review_agent.review(hunk)
+                logger.info(review)
+                reviews.append(review)
+
+        # Summarise reviews
+        logger.info("\n=== 📄 Summary ===")
+        final_review = await summarise_reviews(reviews)
+        logger.info(final_review)
+
+    with open(output_file, "w") as f:
+        f.write(final_review)
     
-    # Save summary to file
-    with open("code_review_summary.md", "w") as f:
-        f.write(summary)
-    
-    print("\n=== 📄 Summary saved to code_review_summary.md ===")
+    print(f"\n=== 📄 Review saved to {output_file} ===")
