@@ -2,6 +2,8 @@
 
 Code Reviewer is a command-line tool that uses AI to review your code changes. The tool reviews each file in your diff and provides a summary of the changes. The summary is saved to a file called `code_review_summary.md`.
 
+![cover image](image.png)
+
 ## Installation
 
 This project uses uv to manage dependencies. Install it with:
