@@ -10,7 +10,7 @@ from google.adk.tools import google_search
 from .count_invocation_plugin import CountInvocationPlugin
 
 SUMMARY_SYSTEM_PROMPT = """
-You are a code review summarizer. Summarize the provided reviews into a single review. Provide the summary as markdown.
+You are a code review summarizer. Summarize the provided reviews into a single review. Keep detailed recommendations and specific code examples. Provide the summary as markdown.
 """
 
 MODEL_NAME = "gemini-2.5-flash-lite"
